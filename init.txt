@@ -1,0 +1,27 @@
+ORG &2000
+SADD &2000
+
+; Disable interrupts
+>START SIL
+ENTSR 0
+
+; Write dummy stack frame
+ENTALK 5
+STRAL 3
+ENTALK 0
+CL 2
+ENTSR &011
+CL 0
+CL 1
+CL 2
+CL 3
+CL 4
+ENTSR 0
+
+; Initialize PC to starting value
+ENTICR 1
+ENTBK 6
+RJP READWORD
+STRAL 1
+
+; Fall through to parameter decoder

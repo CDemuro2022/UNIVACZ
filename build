@@ -1,0 +1,51 @@
+#!/bin/bash
+
+cat init.txt \
+    param_decoder.txt \
+    PC.txt \
+    get_set_var.txt \
+    instr_decoder.txt \
+    instructions/unimplemented_op.txt \
+    instructions/call_op.txt \
+    instructions/store_op.txt \
+    instructions/print_op.txt \
+    instructions/print.txt \
+    instructions/print_paddr_op.txt \
+    instructions/inc_op.txt \
+    instructions/ret.txt \
+    instructions/rtrue_op.txt \
+    instructions/jg_op.txt \
+    instructions/branch.txt \
+    instructions/jz_op.txt \
+    instructions/add_op.txt \
+    instructions/print_num_op.txt \
+    instructions/jump_op.txt \
+    instructions/je_op.txt \
+    instructions/jl_op.txt \
+    instructions/push_op.txt \
+    instructions/pull_op.txt \
+    instructions/pop_op.txt \
+    instructions/load_op.txt \
+    instructions/dec_op.txt \
+    instructions/dec_chk_op.txt \
+    instructions/inc_chk_op.txt \
+    instructions/sub_op.txt \
+    instructions/mul_op.txt \
+    instructions/div_op.txt \
+    instructions/mod_op.txt \
+    instructions/not_op.txt \
+    instructions/and_op.txt \
+    instructions/or_op.txt \
+    instructions/loadw_op.txt \
+    instructions/loadb_op.txt \
+    instructions/storeb_op.txt \
+    instructions/storew_op.txt \
+    instructions/ret_op.txt \
+    instructions/rfalse_op.txt \
+    instructions/ret_popped_op.txt \
+    instructions/get_object.txt \
+    instructions/get_parent_op.txt \
+    instructions/get_child_op.txt \
+    instructions/get_sibling_op.txt \
+    instructions/jin_op.txt > combined.txt
+../UNIVAC-1219/target/release/assembler combined.txt

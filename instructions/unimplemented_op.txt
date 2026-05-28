@@ -1,0 +1,18 @@
+
+; Stub instruction handler to stop interpreter
+; when an unimplemented instruction opcode is
+; encountered. Debugging instructions can be
+; added when necessary
+
+>UNIMPLEMENTED_OP DATA 0
+OUT 0
+DATA UNIMPLEMENTED_MSG+26
+DATA UNIMPLEMENTED_MSG
+STOP &40
+
+>UNIMPLEMENTED_MSG AW Unimplemented Instruction
+DATA 13
+DATA 10
+
+END
+

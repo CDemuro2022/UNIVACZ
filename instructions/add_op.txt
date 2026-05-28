@@ -1,0 +1,23 @@
+
+>ADD_OP DATA 0
+ENTSR 0
+
+; Add two parameters together
+ENTAL PARAMS
+ADDAL PARAMS+1
+
+; Mask result to 16 bits
+SLCL WORDMSK
+
+; Shift result into AU
+LSHA 18
+
+; Read result variable number
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+
+; Set variable to result and finish
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER

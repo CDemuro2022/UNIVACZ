@@ -1,0 +1,10 @@
+
+>RFALSE_OP DATA 0
+
+; Shift 0 into AU
+ENTSR 0
+ENTALK 0
+LSHA 18
+
+; Return
+JP RET_SUB

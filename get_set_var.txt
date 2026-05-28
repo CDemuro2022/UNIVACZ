@@ -1,0 +1,185 @@
+
+; Variable handler routines
+; Variable numbers:
+; 0 - stack
+; 1-15 - local variables
+; 16-255 - global variables
+
+
+; Determine variable type
+>GETVAR DATA 0
+ENTSR 0
+JPALZ FETCH_STACK
+CMAL GLOBALTHRS
+JPALNG FETCH_LOCAL
+
+; Global variable fetch
+ENTICR 1
+STRAL TMPALVAR
+STRB TMPPC
+
+; Read address of global variable table
+ENTBK &14
+RJP READWORD
+STRAL 1
+
+; Convert variable number to table index
+ENTAL TMPALVAR
+ADDALK &7757
+
+; Convert index to table offset
+LSHAL 1
+ADDAL 1
+STRAL 1
+
+; Read value and restore PC
+RJP READWORD
+ENTB TMPPC
+IJP GETVAR
+
+>GLOBALTHRS DATA &20
+>TMPALVAR DATA 0
+>TMPPC DATA 0
+
+; Stack frame format:
+; Offset 0 - Pointer to previous frame
+; Offset 1 - Return address of current routine
+; Offset 2 - Number of local variables in current routine
+; Offset 3 - Result variable number
+; Offset 4 - Number of words currently on routine stack
+; Offset 5+ - Local variables
+; Further offsets - Routine stack entries
+
+
+; Stack pull routine
+; ICR 3 serves as stack pointer
+>FETCH_STACK ENTICR 3
+; Decrement stack pointer
+ENTBKB &7776
+
+; Bank 1 is stack bank (stack is currently 4k in size)
+ENTSR &11
+
+; Read stack value
+ENTALB 0
+ENTSR 0
+STRAL TMPALVAR
+
+; ICR 2 is stack frame pointer 
+ENTICR 2
+
+; Decrement stack word count in frame header
+ENTALK &7776
+ENTSR &11
+ADDALB 4
+STRALB 4
+ENTSR 0
+
+; Return stack value
+ENTAL TMPALVAR
+IJP GETVAR
+
+
+; Local variable fetch routine
+>FETCH_LOCAL ENTICR 1
+
+; Preserve PC
+STRB TMPPC
+ENTICR 2
+
+; Calculate offset from frame header
+ADDALK 4
+ADDAL 2
+STRAL 1
+ENTICR 1
+ENTSR &11
+
+; Read value of local variable
+ENTALB 0
+
+; Restore PC and return value
+ENTSR 0
+ENTB TMPPC
+IJP GETVAR
+
+
+; Variable set routines
+>SETVAR DATA 0
+ENTSR 0
+JPALZ SET_STACK
+CMAL GLOBALTHRS
+JPALNG SET_LOCAL
+
+STRAL TMPALVAR
+ENTICR 1
+STRB TMPPC
+
+; Read address of global variable table
+ENTBK &14
+RJP READWORD
+STRAL 1
+
+; Convert variable number to table index
+ENTAL TMPALVAR
+ADDALK &7757
+
+; Convert index to table offset
+LSHAL 1
+ADDAL 1
+STRAL 1
+
+; Shift variable value from AU to AL
+RSHA 18
+
+; Write variable value
+RJP WRITEWORD
+
+; Restore PC and return
+ENTSR 0
+ENTB TMPPC
+IJP SETVAR
+
+
+; Stack push routine
+>SET_STACK ENTICR 3
+ENTSR &11
+
+; Write value to current stack index
+STRAUB 0
+
+; Increment stack pointer
+ENTBKB 1
+
+; Increment stack counter in frame header
+ENTICR 2
+ENTALK 1
+ADDALB 4
+STRALB 4
+
+; Return
+IJP SETVAR
+
+
+; Local variable set
+>SET_LOCAL ENTICR 1
+
+; Preserve PC
+STRB TMPPC
+
+; Calculate variable offset from header
+ENTICR 2
+ADDALK 4
+ADDAL 2
+STRAL 1
+ENTICR 1
+ENTSR &11
+
+; Write value
+STRAUB 0
+ENTSR 0
+ENTICR 1
+
+; Restore PC and return
+ENTB TMPPC
+IJP SETVAR
+

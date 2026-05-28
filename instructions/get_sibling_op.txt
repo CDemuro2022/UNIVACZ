@@ -1,0 +1,50 @@
+
+>GET_SIBLING_OP DATA 0
+ENTSR 0
+
+; Read object number into AL
+ENTAL PARAMS
+ENTICR 1
+
+; Preserve PC
+STRB TMPPC
+
+; Set PC to object address
+RJP GET_OBJECT
+
+; Set PC to sibling object address
+ENTBKB 5
+
+; Read sibling object number
+RJP READBYTE
+
+; Shift sibling object into AU
+; (and store in temp location)
+STRAL PARAMS
+LSHA 18
+ENTSR 0
+
+; Restore PC
+ENTB TMPPC
+
+; Read result variable number
+RJP READBYTE
+RJP INCPC
+ENTSR 0
+
+; Set result variable to sibling number
+RJP SETVAR
+ENTSR 0
+
+; If the sibling object is not 0, the condition
+; is true
+ENTAL PARAMS
+JPALNZ GET_SIBLING_TRUE
+
+; Otherwise, the condition is false
+CL PARAMS
+JP PERFORM_BRANCH
+
+>GET_SIBLING_TRUE ENTALK 1
+STRAL PARAMS
+JP PERFORM_BRANCH

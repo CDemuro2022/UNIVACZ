@@ -1,0 +1,3 @@
+#!/bin/bash
+
+../UNIVAC-1219/target/release/disassembler combined.txt.76

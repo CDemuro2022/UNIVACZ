@@ -1,0 +1,14 @@
+
+>RET_POPPED_OP DATA 0
+
+; Read from variable 0 to pull from stack
+ENTSR 0
+ENTALK 0
+RJP GETVAR
+
+; Shift value into AU
+LSHA 18
+ENTSR 0
+
+; Return
+JP RET_SUB

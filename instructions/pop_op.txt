@@ -1,0 +1,8 @@
+
+>POP_OP DATA 0
+; Pop off the stack by fetching variable 0
+; and discarding result
+ENTALK 0
+RJP GETVAR
+ENTSR 0
+JP PARAM_DECODER

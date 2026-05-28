@@ -1,0 +1,32 @@
+
+>JL_OP DATA 0
+OUT 0
+DATA JL_MSG+15
+DATA JL_MSG
+ENTSR 0
+
+; Read second parameter and convert to unsigned magnitude
+ENTAL PARAMS+1
+SLCP WORDSIGN
+STRAL PARAMS+1
+
+; Do the same to the first parameter
+ENTAL PARAMS
+SLCP WORDSIGN
+
+; If the first parameter is less than the second,
+; set the condition to true
+CMAL PARAMS+1
+JPALNG JL_TRUE
+
+; Otherwise the condition is false
+CL PARAMS
+JP PERFORM_BRANCH
+
+>JL_TRUE ENTALK 1
+STRAL PARAMS
+JP PERFORM_BRANCH
+
+>JL_MSG AW JL Instruction
+DATA 13
+DATA 10

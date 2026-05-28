@@ -1,0 +1,84 @@
+
+>PRINT_NUM_OP DATA 0
+OUT 0
+DATA PRINT_NUM_MSG+22
+DATA PRINT_NUM_MSG
+
+; Set loop counter to 5
+ENTSR 0
+ENTICR 0
+ENTBK 5
+
+; Clear AL
+ENTALK 0
+
+; Shift 0 into AU
+LSHA 18
+
+; Read number to print into AL
+ENTAL PARAMS
+
+; If it is positive, simply reset the number
+LSHAL 2
+JPALP RESET_DECIMAL_SHIFT
+; Otherwise, reset the number and then convert it
+; to its unsigned value
+LSHAL 16
+CPAL
+ADDALK 1
+SLCL WORDMSK
+JP DIGIT_LOOP
+
+>RESET_DECIMAL_SHIFT ENTAL PARAMS
+
+; Divide number by 10 to extract current digit
+>DIGIT_LOOP DIVA TEN
+
+; Shift remainder into AL
+LSHA 18
+
+; Convert digit into ASCII digit
+ADDALK 48
+
+; Store it in print buffer
+STRALB PRINT_BUF
+
+; Clear AU and shift result back into AL
+ENTALK 0
+LSHA 18
+
+; Decrement loop counter
+ENTBKB &7776
+
+; If the result is not 0, keep looping
+JPALNZ DIGIT_LOOP
+
+; Otherwise, check sign of number
+ENTAL PARAMS
+LSHAL 2
+
+; If positive, it's ready to print
+JPALP DECIMAL_PRINT
+
+; Otherwise, add a negative sign to print buffer
+ENTALK 45
+STRALB PRINT_BUF
+ENTBKB &7776
+
+; Calculate print buffer ofset and print it
+>DECIMAL_PRINT ENTBKB 1
+ENTAL &10
+ADDAL PRINT_OUT_INST+2
+STRAL DECIMAL_OUT+2
+>DECIMAL_PRINT_CHECK SKPOIN 0
+JP DECIMAL_PRINT_CHECK
+>DECIMAL_OUT OUT 0
+DATA PRINT_BUF+5
+DATA PRINT_BUF
+JP PARAM_DECODER
+
+>TEN DATA 10
+
+>PRINT_NUM_MSG AW Print_Num Instruction
+DATA 13
+DATA 10

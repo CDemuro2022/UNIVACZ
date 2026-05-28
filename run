@@ -1,0 +1,3 @@
+#!/bin/bash
+
+../UNIVAC-1219/target/release/emulator --tape-file combined.txt.76 -r 

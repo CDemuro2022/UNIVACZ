@@ -1,0 +1,7 @@
+
+; Regular print instruction simply calls print
+; subroutine to print Z-string at current PC
+
+>PRINT_OP DATA 0
+RJP PRINT_SUB
+JP PARAM_DECODER

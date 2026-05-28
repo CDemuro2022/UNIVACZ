@@ -1,0 +1,23 @@
+
+>PRINT_PADDR_OP DATA 0
+; Preserve PC
+ENTAL &1
+STRAL TMPPC
+
+; Read packed address of string
+ENTAL PARAMS
+
+; Unpack address
+LSHAL 1
+
+; Store address as temporary PC
+STRAL &1
+
+; Print string
+RJP PRINT_SUB
+
+; Restore PC and finish
+ENTAL TMPPC
+STRAL &1
+JP PARAM_DECODER
+

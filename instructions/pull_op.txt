@@ -1,0 +1,18 @@
+
+>PULL_OP DATA 0
+
+; Get stack value by reading from variable 0
+ENTALK 0
+RJP GETVAR
+
+; Shift value into AU
+LSHA 18
+
+; Read result variable number into AL
+ENTAL PARAMS
+ENTSR 0
+
+; Set result variable to value
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER

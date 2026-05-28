@@ -1,0 +1,34 @@
+
+>NOT_OP DATA 0
+ENTSR 0
+
+; Read value into AL
+ENTAL PARAMS
+
+; If the value is all zeros, make it hex FFFF
+JPALZ NOT_ALL_ZEROS
+
+; Otherwise, complement AL
+CPAL
+
+; Mask the result to 16 bits
+SLCL WORDMSK
+
+; Shift the value into AU
+>NOT_STORE LSHA 18
+
+; Read the result variable number
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+ENTSR 0
+
+; Set result variable to value
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER
+
+
+
+>NOT_ALL_ZEROS ENTAL WORDMSK
+JP NOT_STORE

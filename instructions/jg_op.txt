@@ -1,0 +1,36 @@
+
+>JG_OP DATA 0
+OUT 0
+DATA JG_MSG+15
+DATA JG_MSG
+ENTSR 0
+
+; Read first parameter into AL
+ENTAL PARAMS
+
+; Complement sign to get unsigned magnitude
+SLCP WORDSIGN
+STRAL PARAMS
+
+; Do the same to the second parameter
+ENTAL PARAMS+1
+SLCP WORDSIGN
+
+; If the second parameter is less than the first,
+; Set the condition to true
+CMAL PARAMS
+JPALNG JG_TRUE
+
+; Otherwise, set the condition to false
+CL PARAMS
+JP PERFORM_BRANCH
+
+>JG_TRUE ENTALK 1
+STRAL PARAMS
+JP PERFORM_BRANCH
+
+>WORDSIGN DATA &100000
+
+>JG_MSG AW JG Instruction
+DATA 13
+DATA 10

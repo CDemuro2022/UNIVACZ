@@ -1,0 +1,31 @@
+
+>MOD_OP DATA 0
+
+; Clear AU
+ENTALK 0
+LSHA 18
+
+; Divide first parameter by second parameter
+ENTSR 0
+ENTAL PARAMS
+DIVA PARAMS+1
+
+; Shift remainder into AL
+LSHA 18
+
+; Mask result to 16 bits
+SLCL WORDMSK
+
+; Shift result back into AU
+LSHA 18
+
+; Read result variable number
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+
+; Set result variable to value
+ENTSR 0
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER

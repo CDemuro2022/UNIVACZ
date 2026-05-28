@@ -1,0 +1,25 @@
+
+>SUB_OP DATA 0
+ENTSR 0
+
+; Subtrack second parameter from first parameter
+ENTAL PARAMS
+SUBAL PARAMS+1
+
+; Mask the result to 16 bits
+SLCL WORDMSK
+
+; Shift result into AU
+LSHAL 18
+
+; Read result varibale number
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+ENTSR 0
+
+; Set result variable to value
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER
+

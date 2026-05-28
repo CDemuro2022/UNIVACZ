@@ -1,0 +1,8 @@
+
+>JUMP_OP DATA 0
+; Read offset to jump to
+ENTSR 0
+ENTAL PARAMS
+
+; Unconditionally branch
+JP BRANCH_OFFSET

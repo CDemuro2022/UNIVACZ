@@ -1,0 +1,235 @@
+
+; Put instruction in AL register (This will be removed in final program)
+>PARAM_DECODER ENTICR 1
+RJP READBYTE
+RJP INCPC
+; Cache opcode in instruction location
+STRAL INST
+; Check if the opcode is a Variable-form instruction
+CMAL VARTHRS
+; If it is, jump to Variable instruction handler
+JPALP VARINST
+; Check if the opcode is a Short-form instruction
+CMAL SHRTTHRS
+; If it is, jump to the short-form instruction handler
+JPALP SHRTINST
+
+; Otherwise, it must be a long-from instruction
+; Print "Long Instruction"
+>LNGINST OUT 0
+DATA LNGSTRNG+17
+DATA LNGSTRNG
+; Set up default params for long instruction (2 small constants)
+ENTAU LNGMSK
+; Shift opcode to the top of AL
+LSHAL 11
+; If the top bit is 0, the first operand is a short constant, so leave it
+JPALP LNGCHK
+; Otherwise, it's a variable, so swap the registers
+LSHA 18
+; Invert the bits for the first parameter
+SLCP LNGADD
+; Swap the registers back
+LSHA 18
+; Check the next bit of the opcode
+>LNGCHK LSHAL 1
+; If the top bit is 0, the second operand is a short constant, so leave it
+JPALP LNGFIN
+; Otherwise, it's a variable, so swap the registers
+LSHA 20
+; Invert the bits for the second parameter
+SLCP LNGADD
+; Swap the registers back
+LSHA 16
+; Shift the opcode number back to the bottom
+>LNGFIN LSHAL 6
+; Call parameter fetch routine
+RJP PARAM_FETCH
+
+; Put instruction in AL and mask out opcode number
+ENTAL INST
+SLCL LNGOP
+
+; Move instruction into B register (ICR 0)
+; TODO: Refactor this for efficiency and readability
+STRAL INST
+ENTB INST
+
+; Jump to instruction code
+IRJPB TWO_OP_TABLE
+>LNGSTRNG AW Long Instruction
+DATA 13
+DATA 10
+
+; Default parameters for long-form instructions (2 small constants)
+>LNGMSK DATA &276000
+; Mask used to invert parameter bits for long-form instructions
+>LNGADD DATA &600000
+
+>LNGOP DATA &37
+
+; Print "Short Instruction"
+>SHRTINST OUT 0
+DATA SHRTSTRNG+18
+DATA SHRTSTRNG
+; Mask out parameter bits of short-form instruction
+SLSET SHRTMSK
+; Start shifting opcode to parameter bitfield
+LSHA 4
+; Use mask again to set bottom bit of parameter bitfield
+SLSET SHRTMSK
+; Finish shift
+LSHA 26
+; Call parameter fetch routine
+RJP PARAM_FETCH
+ENTSR 0
+; Reset AL to opcode
+ENTAL INST
+
+; Mask out opcode number
+SLCL SHRTOP
+STRAL INST
+ENTB INST
+
+; Jump to 0-OP or 1-OP instruction table
+ENTAU PARAMCNT
+JPAUNZ ONE_OP
+IRJPB ZERO_OP_TABLE
+>ONE_OP IRJPB ONE_OP_TABLE
+>SHRTSTRNG AW Short Instruction
+DATA 13
+DATA 10
+
+>SHRTOP DATA &17
+
+; Print "VAR Instruction"
+>VARINST OUT 0
+DATA VARSTRNG+16
+DATA VARSTRNG
+; Read parameter bitfield into AU
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+LSHA 18
+; Shift parameter bitfield into position
+LSHAU 10
+; Call parameter fetch routine
+RJP PARAM_FETCH
+ENTSR 0
+ENTAU INST
+
+; Set AL to opcode number
+ENTAL INST
+SLCL LNGOP
+STRAL INST
+ENTB INST
+
+; Determine opcode count (2OP or VAROP) and jump to instruction table
+LSHAU 12
+JPAUNG VAR_OP
+IRJPB TWO_OP_TABLE
+>VAR_OP IRJPB VAR_OP_TABLE
+>VARSTRNG AW VAR Instruction
+DATA 13
+DATA 10
+
+; Lowest possible variable instruction
+>VARTHRS DATA &300
+; Lowest possible short instruction
+>SHRTTHRS DATA &200
+; Parameter-checking mask for long threshold
+>LNGTHRS DATA &400000
+
+; Define instruction to analyze
+>INST DATA &300
+
+; Parameter mask for short instructions
+>SHRTMSK DATA &317
+
+; Define words to store parameters
+>PARAMS DATA 0
+DATA 0
+DATA 0
+DATA 0
+
+; Word to store parameter count of current instruction
+>PARAMCNT DATA 0
+
+; Word to store maximum loop count for parameter fetching
+>MAXPARAMS DATA 3
+
+; Start of parameter fetch routine
+>PARAM_FETCH DATA 0
+
+ENTICR 0
+; Zero out B register
+ENTBK 0
+
+; Main parameter fetching loop: If the first bit of current param is 1,
+; jump to checks for variable parameter or omitted parameter
+>PARAM_FETCH_LOOP ENTICR 1
+JPAUNG CHECK_OMIT
+
+; Otherwise, shift the next bit over
+LSHAU 1
+; If the next bit is 0, it must be a large constant
+JPAUP LARGE_PARAM
+; Otherwise, it's a short constant
+OUT 0
+DATA SHTPARAM+16
+DATA SHTPARAM
+RJP READBYTE
+RJP INCPC
+; Jump to the end of the loop
+JP PARAM_FETCH_DEC
+
+; Print "Large Parameter" and then jump to the end of the loop
+>LARGE_PARAM OUT 0
+DATA LGPARAM+16
+DATA LGPARAM
+RJP READWORD
+RJP INCPC
+JP PARAM_FETCH_DEC
+
+; Shift in the next bit
+>CHECK_OMIT LSHAU 1
+; If it's negative, the parameter is omitted, and we're done
+JPAUNG PARAM_FETCH_END
+; Otherwise, it's a variable, so print "Variable Parameter"
+OUT 0
+DATA VARPARAM+19
+DATA VARPARAM
+RJP READBYTE
+RJP INCPC
+RJP GETVAR
+
+; Shift in the next bit
+>PARAM_FETCH_DEC LSHAU 1
+ENTICR 0
+ENTSR 0
+; Store the current parameter value from AL into params array
+STRALB PARAMS
+; Loop instruction
+BSK MAXPARAMS
+; Jump back to the beginning of the loop
+JP PARAM_FETCH_LOOP
+; Increment B to get param count
+ENTBKB 1
+; Store B in memory to save parameter count
+>PARAM_FETCH_END ENTICR 0
+STRB PARAMCNT
+; Return from the subroutine
+IJP PARAM_FETCH
+
+>VARPARAM AW Variable Parameter
+DATA 13
+DATA 10
+
+>SHTPARAM AW Short Parameter
+DATA 13
+DATA 10
+
+>LGPARAM AW Large Parameter
+DATA 13
+DATA 10
+

@@ -1,0 +1,24 @@
+
+>LOAD_OP DATA 0
+ENTSR 0
+; Read variable number into AL
+ENTAL PARAMS
+
+; Get value of variable
+RJP GETVAR
+
+; Shift value into AU
+LSHA 18
+ENTSR 0
+
+; Read result variable number
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+
+; Set result variable to value
+ENTSR 0
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER
+

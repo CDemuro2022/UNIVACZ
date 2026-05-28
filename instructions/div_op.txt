@@ -1,0 +1,31 @@
+
+>DIV_OP DATA 0
+
+; Clear AU
+ENTALK 0
+LSHA 18
+ENTSR 0
+
+; Read first parameter into AL
+ENTAL PARAMS
+
+; Divide first parameter by second parameter
+DIVA PARAMS+1
+
+; Mask the result to 16 bits
+SLCL WORDMSK
+
+; Shift the result into AU
+LSHA 18
+
+; Read result variable number
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+
+; Set result variable to value
+ENTSR 0
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER
+

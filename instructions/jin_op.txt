@@ -1,0 +1,39 @@
+
+>JIN_OP DATA 0
+ENTSR 0
+ENTICR 1
+
+; Read second object number into AL
+ENTAL PARAMS+1
+
+; Preserve PC
+STRB TMPPC
+
+; Set PC to address of second object
+RJP GET_OBJECT
+
+; Set PC to address of child of second object
+ENTBKB 6
+
+; Read second object child number
+ENTSR 0
+RJP READBYTE
+
+; Restore PC
+ENTSR 0
+ENTB TMPPC
+
+; Check if the second object's child is the first object
+CMAL PARAMS
+
+; If it is, the condition is true
+JPALZ JIN_TRUE
+
+; Otherwise, the condition is false
+CL PARAMS
+JP PERFORM_BRANCH
+
+>JIN_TRUE ENTALK 1
+STRAL PARAMS
+JP PERFORM_BRANCH
+

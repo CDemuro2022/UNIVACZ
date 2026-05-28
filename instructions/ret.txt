@@ -1,0 +1,42 @@
+
+; Generic handler to return from current routine
+
+>RET_SUB ENTICR 2
+ENTSR &11
+
+; Read return address from stack frame header
+ENTALB 1
+
+; Store return address into PC
+ENTSR 0
+STRAL &1
+
+; Read result variable number from stack frame header
+ENTSR &11
+ENTALB 3
+
+; Store result variable number in temp location
+ENTSR 0
+STRAL TMPALVAR
+
+; Pop current stack frame off of header
+ENTSR &11
+ENTBB 0
+
+; Calculate address of stack pointer
+ENTALB 2
+ADDALB 4
+ENTSR 0
+ADDAL 2
+ADDALK 5
+
+; Store stack pointer in ICR 3
+STRAL 3
+
+; Set result variable to return value
+ENTAL TMPALVAR
+RJP SETVAR
+ENTSR 0
+
+; Finish return
+JP PARAM_DECODER

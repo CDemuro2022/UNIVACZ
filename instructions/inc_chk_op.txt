@@ -1,0 +1,45 @@
+
+; Currently failing CZECH test for unknown reasons
+
+>INC_CHK_OP DATA 0
+ENTSR 0
+
+; Read variable number into AL
+ENTAL PARAMS
+
+; Get value of variable
+RJP GETVAR
+
+; Increment value and mask to 16 bits
+ADDALK 1
+ENTSR 0
+SLCL WORDMSK
+
+; Shift value into AU
+LSHA 18
+
+; Store new value in temp memory location
+STRAU PARAMS+2
+
+; Read variable number into AL
+ENTAL PARAMS
+
+; Set variable to new value
+RJP SETVAR
+ENTSR 0
+
+; If the comparison value is now less than the new value,
+ENTAL PARAMS+1
+CMAL PARAMS+2
+
+; The condition is true
+JPALNG INC_CHK_TRUE
+
+; Otherwise the condition is false
+CL PARAMS
+JP PERFORM_BRANCH
+
+>INC_CHK_TRUE ENTALK 1
+STRAL PARAMS
+JP PERFORM_BRANCH
+

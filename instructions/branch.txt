@@ -1,0 +1,85 @@
+
+
+; Routine to handle branching instructions
+>PERFORM_BRANCH ENTICR 1
+
+; Read first byte of branching data
+RJP READBYTE
+
+; Isolate top bit for when branch occurs (0 for false, 1 for true)
+RSHAL 7
+ENTSR 0
+
+; Combine branch condtion with result of previous instruction
+SLCP PARAMS
+STRAL PARAMS
+
+; Re-read first byte of branch instruction
+RJP READBYTE
+
+; Increment PC
+RJP INCPC
+
+; Check bit 6 to see if branch offset is one byte or two bytes
+LSHAL 11
+
+; If set, it's a one-byte branch
+JPALNG ONE_BYTE_BRANCH
+
+; Otherwise, it's a two-byte branch, so mask out the branch offset
+LSHAL 7
+SLCL BRANCHMSK
+
+; Shift the high byte of branch offset into AU
+LSHA 18
+
+; Read the second byte of branch offset
+RJP READBYTE
+
+; Increment PC
+RJP INCPC
+
+; Shift low byte of branch offset to the top of AL
+LSHAL 10
+
+; Shift full branch offset into AL
+RSHA 10
+
+; Sign-extend branch offset if necessary to 16 bits
+CMAL OFFSETSIGN
+JPALNG TEST_BRANCH
+SLSET OFFSETEXTEND
+JP TEST_BRANCH
+
+; Reset branch offset byte and mask out offset
+>ONE_BYTE_BRANCH LSHAL 7
+SLCL BRANCHMSK
+
+; Test condition to see if branch occurs (0 for branch, 1 for no branch)
+>TEST_BRANCH ENTAU PARAMS
+JPAUNZ PARAM_DECODER
+
+; If branch offset is 0 or 1, return false or true 
+>BRANCH_OFFSET ENTSR 0
+JPALZ RET_BRANCH 
+CMAL ONE
+JPALZ RET_BRANCH
+
+; Calculate new PC (PC + offset - 2)
+ADDAL &1
+ADDALK &7775
+STRAL &1
+
+; Jump back from current routine
+JP PARAM_DECODER
+
+; Shift return value into AU and return from subroutine
+>RET_BRANCH LSHA 18
+JP RET_SUB
+
+>BRANCHMSK DATA &77
+>OFFSETSIGN DATA &20000
+>OFFSETEXTEND DATA &340000
+
+>ONE DATA 1
+

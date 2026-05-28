@@ -1,0 +1,143 @@
+
+; Routines to read/write to Z-Machine memory
+; Must be extensively reworked when 1540 
+; is implemented
+
+
+; Routine to read a byte from Z-Machine memory
+; Can use any ICR but usually ICR 1
+>READBYTE DATA 0
+
+; Preserve previous SR in unused memory location
+STRSR UNIMPLEMENTED_OP
+
+; Switch to Z-Machine bank
+ENTSR &14
+
+; Read value from memory
+ENTALB 0
+ENTSR 0
+
+; Preserve value in temp location
+STRAL TMPAL
+
+; Restore SR
+ENTAL UNIMPLEMENTED_OP
+SLSET SRMSK
+STRAL RESETSR
+ENTAL TMPAL
+>RESETSR ENTSR 0
+
+; Return value
+IJP READBYTE
+
+
+; Routine to return Z-Machine word
+; WARNING: Increments PC by 1
+>READWORD DATA 0
+
+; Preserve SR
+STRSR UNIMPLEMENTED_OP
+ENTSR &14
+
+; Read high byte from memory
+ENTALB 0
+
+; Shift high byte up
+LSHAL 8
+ENTSR 0
+
+; Store high byte in temp location
+STRAL TMPAL
+
+; Increment PC
+RJP INCPC
+
+; Read low byte from memory
+ENTSR &14
+ENTALB 0
+ENTSR 0
+
+; Combine bytes into word
+SLSET TMPAL
+STRAL TMPAL
+
+; Restore SR
+ENTSR 0
+ENTAL UNIMPLEMENTED_OP
+SLSET SRMSK
+STRAL RESETSRWORD
+ENTAL TMPAL
+>RESETSRWORD ENTSR 0
+
+; Return word
+IJP READWORD
+
+
+>TMPAL DATA 0
+>SRMSK DATA &507300
+
+; Temporary routine in case processing is required
+; in future when incrementing PC. Might be removed.
+>INCPC DATA 0
+ENTBKB 1
+IJP INCPC
+
+
+; Routine to write byte to Z-Machine memory
+; Value to write in AL
+>WRITEBYTE DATA 0
+; Preserve SR
+STRSR UNIMPLEMENTED_OP
+
+; Mask AL to byte
+SLCL BYTEMSK
+
+; Write byte to memory
+ENTSR &14
+STRALB 0
+
+; Restore SR and return
+ENTAL UNIMPLEMENTED_OP
+SLSET SRMSK
+STRAL RESETSRWRITE
+>RESETSRWRITE ENTSR 0
+IJP WRITEBYTE
+
+
+; Routine to write word to Z-Machine memory
+>WRITEWORD DATA 0
+
+; Preserve SR
+STRSR UNIMPLEMENTED_OP
+
+; Preserve word in temp location
+STRAL TMPAL
+ENTSR &14
+
+; Write high byte
+RSHAL 8
+STRALB 0
+ENTSR 0
+
+; Increment PC
+RJP INCPC
+
+; Mask out low byte
+ENTAL TMPAL
+SLCL BYTEMSK
+
+; Write low byte
+ENTSR &14
+STRALB 0
+
+; Restore SR and return
+ENTSR 0
+ENTAL UNIMPLEMENTED_OP
+SLSET SRMSK
+STRAL RESETSRWRITEWORD
+>RESETSRWRITEWORD ENTSR 0
+IJP WRITEWORD
+
+
+>BYTEMSK DATA &377

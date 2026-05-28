@@ -1,0 +1,611 @@
+
+; Generic print subroutine that prints from the current PC (ICR 1)
+>PRINT_SUB DATA 0
+OUT 0
+DATA PRINT_MSG+18
+DATA PRINT_MSG
+>RUNNING_PRINT SKPOIN 0
+JP RUNNING_PRINT
+; Clear AL, AU and loop counter for print buffer index
+ENTALK 0
+LSHA 18
+ENTALK 0
+STRAL &10
+; Fetch the first word of the Z-string
+RJP GETSTRINGWORD
+; Start processing characters
+JP PROCESSCHAR
+
+>FETCHCURRENTCHAR DATA 0
+; Shift in next character of current word
+ENTAL CURRENTWORD
+LSHAL 5
+; Store word back to temp location
+STRAL CURRENTWORD
+; Check if we've reached the end of current word
+ISK CHARINDEX
+; If not, we're done, return
+IJP FETCHCURRENTCHAR
+; Otherwise, check if top bit of word is set
+ENTAL CURRENTWORD
+LSHAL 15
+; If it is, we're done, the string has ended
+JPALNG PRINT_END
+; Otherwise, get the next word
+RJP GETSTRINGWORD
+; Then rerun subroutine
+JP FETCHCURRENTCHAR+1
+
+>GETSTRINGWORD DATA 0 
+; Read next word of string
+ENTICR 1
+RJP READWORD
+RJP INCPC
+ENTSR 0
+; Shift first character of word into position
+LSHAL 3
+STRAL CURRENTWORD
+; Reset character index
+ENTALK 3
+STRAL CHARINDEX
+; Return
+IJP GETSTRINGWORD
+
+; Fetch the next character of the string
+>PROCESSCHAR RJP FETCHCURRENTCHAR
+SLCL LNGOP
+; If it's a zero, the character must be a space
+JPALZ SPACE_CHAR
+; Otherwise, check if it's an abbreviation character
+CMAL A1THRS
+; If it is, jump to the abbreviation handler
+JPALNG ABBREVPRINT
+; If it's an A1 shift handler, skip it. No mixed-case
+; on the UNIVAC
+JPALZ PROCESSCHAR
+; Check if it's an A2 shift character
+CMAL A2SHIFT
+; If it's not, jump to the alphabet check
+JPALNZ CHECKAL
+; If it is, set the current alphabet to A2
+ENTALK 1
+STRAL CURRENTAL
+; Process the next character, now in A2
+JP PROCESSCHAR
+; If the current alphabet is A2,
+>CHECKAL ISK CURRENTAL
+; Jump to the A2 handler
+JP WRITE_A2
+; Otherwise, jump to the A0 handler
+JP WRITE_A0
+
+; Load constant into AL for space character
+; Processed through the A0 handler
+>SPACE_CHAR ENTALK &7744
+
+; Turn Z-character into ASCII character
+>WRITE_A0 ADDALK 59
+ENTSR 0
+ENTICR 0
+; Store character in print buffer
+STRALB PRINT_BUF
+; If the print buffer is full, flush it
+BSK PRINT_LIMIT
+JP PROCESSCHAR
+RJP FLUSH_BUF
+JP PROCESSCHAR
+
+; Convert Z-character into A2 index
+>WRITE_A2 ADDALK &7771
+ENTSR 0
+ENTICR 0
+; If the character was 6 (now 0), it's the beginning
+; of an ASCII escape, so jump to that handler
+JPALZ WRITE_ASC
+; Otherwise, reuse ICR 0 as an A2 index
+ENTAU &10
+STRAL &10
+; Read the character from A2 table
+ENTALB A2
+; Restore print buffer index
+STRAU &10
+; Store character in print buffer
+STRALB PRINT_BUF
+; Check if print buffer is full
+BSK PRINT_LIMIT
+; If not, skip to the CR check
+JP CHECKCR
+; Otherwise, flush the print buffer
+RJP FLUSH_BUF
+; Check if the current character is a carriage return
+>CHECKCR CMAL A2+1
+; If not, continue processing characters
+JPALNZ PROCESSCHAR
+; Otherwise, add a line feed afterwards
+ENTALK 10
+STRALB PRINT_BUF
+; Check if the print buffer is full
+BSK PRINT_LIMIT
+; If not, continue processing characters
+JP PROCESSCHAR
+; Otherwise, flush the print buffer
+RJP FLUSH_BUF
+; Then continue
+JP PROCESSCHAR
+
+
+; Handler for ASCII escapes
+
+; Fetch the first character of the escape code
+>WRITE_ASC RJP FETCHCURRENTCHAR
+SLCL LNGOP
+
+; Shift that character into AU
+LSHA 18
+
+; Fetch the next character of the escape code
+RJP FETCHCURRENTCHAR
+SLCL LNGOP
+
+; Shift that character to the top of AL
+LSHAL 13
+
+; Shift the entire escape code into AU
+LSHA 5
+ENTICR 0
+
+; Store the character in the print buffer
+STRAUB PRINT_BUF
+
+; Check if the print buffer is full
+BSK PRINT_LIMIT
+; If not, continue processing characters
+JP PROCESSCHAR
+; If so, flush the buffer, then continue processing
+RJP FLUSH_BUF
+JP PROCESSCHAR
+
+
+; Long and awful handler to print abbreviations
+; Note: This routine has not been tested yet, but will
+; be tested by the CZECH suite towards the end
+
+>ABBREVPRINT OUT 0
+DATA ABBREV_MSG+13
+DATA ABBREV_MSG
+ENTSR 0
+
+; Decrement abbreiation character
+ADDALK &7776
+
+; Shift abbreviation character into AU and multiply by 32
+LSHA 23
+
+; Flush the print buffer
+RJP FLUSH_BUF
+
+; Store the current abbreviation offset in ICR 0
+STRAU &10
+
+; Fetch next character
+RJP FETCHCURRENTCHAR
+SLCL LNGOP
+
+; Add abbreviation offset to address
+ADDAL &10
+STRAL &10
+
+; Preserve state to call print code recursively
+ENTAL CHARINDEX
+STRAL TMPCHARINDEX
+ENTAL CURRENTAL
+STRAL TMPALPHABET
+ENTAL PRINT_SUB
+STRAL PRINTADDRESS
+ENTAL &1
+STRAL PRINTPC
+ENTAL CURRENTWORD
+STRAL TMPCURRENTWORD
+
+; Read address of abbreviations table
+ENTICR 1
+ENTBK &30
+RJP READWORD
+
+; Calculate final abbreviation address
+ADDAL &10
+STRAL &1
+
+; Set up state for recursive call
+ENTALK 3
+STRAL CHARINDEX
+CL CURRENTAL
+
+; Read address of abbreviation string from table
+RJP READWORD
+STRAL &1
+
+; Call print recursively
+RJP PRINT_SUB
+
+; Restore state
+ENTAL TMPCHARINDEX
+STRAL CHARINDEX
+ENTAL TMPALPHABET
+STRAL CURRENTAL
+ENTAL PRINTADDRESS
+STRAL PRINT_SUB
+ENTAL PRINTPC
+STRAL &1
+ENTAL TMPCURRENTWORD
+STRAL CURRENTWORD
+
+; Continue processing string
+JP PROCESSCHAR
+
+>ABBREV_MSG AW Abbreviation
+DATA 13
+DATA 10
+
+
+>TMPCHARINDEX DATA 0
+>TMPALPHABET DATA 0
+>PRINTADDRESS DATA 0
+>PRINTPC DATA 0
+>TMPCURRENTWORD DATA 0
+
+
+; Helper routine for flushing print buffer
+>FLUSH_BUF DATA 0
+ENTSR 0
+
+; Preserve AL (necessary for some calls)
+STRAL TMPALVAR
+
+; Ensure there's nothing already printing
+>PRINT_CHECK SKPOIN 0
+JP PRINT_CHECK
+
+; Calculate and store print buffer offset
+; for flushing non-full buffer
+ENTAL PRINT_OUT_INST+2
+ADDAL &10
+ADDALK &7776
+STRAL PRINT_OUT_INST+1
+
+; Print contents of print buffer
+>PRINT_OUT_INST OUT 0
+DATA PRINT_BUF+255
+DATA PRINT_BUF
+
+; Restore AL
+ENTAL TMPALVAR
+
+; Wait for printing to finish
+; (this should be reworked later to
+; ensure that anything not modifying the print
+; buffer can still run whie this happens)
+>PRINT_CHECK_2 SKPOIN 0
+JP PRINT_CHECK_2
+IJP FLUSH_BUF
+
+
+; Reset state for next print and return
+>PRINT_END RJP FLUSH_BUF
+ENTALK 3
+STRAL CHARINDEX
+CL CURRENTAL
+ENTICR 1
+IJP PRINT_SUB
+
+>CURRENTAL DATA 0
+
+>A1THRS DATA 4
+
+>A2SHIFT DATA 5
+
+>CHARINDEX DATA 3
+
+>CURRENTWORD DATA 0
+
+>PRINT_MSG AW Print Instruction
+DATA 13
+DATA 10
+
+; ASCII translations for A2
+; Character 0 is null because it's the ASCII
+; escape code. Character 1 is CR, but it must
+; be supplemented with LF on the UNIVAC
+
+>A2 DATA 0
+DATA 13
+DATA 48
+DATA 49
+DATA 50
+DATA 51
+DATA 52
+DATA 53
+DATA 54
+DATA 55
+DATA 56
+DATA 57
+DATA 46
+DATA 44
+DATA 33
+DATA 63
+DATA 95
+DATA 35
+DATA 39
+DATA 34
+DATA 47
+DATA 92
+DATA 45
+DATA 58
+DATA 40
+DATA 41
+
+
+; 256-word print buffer. This assembler doesn't
+; carry over the RES directive and I couldn't think
+; of a better way of doing this other than just putting
+; a label at the very end of the source, but doing it like
+; this helps me keep track of code size.
+>PRINT_BUF DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+DATA 0
+
+>PRINT_LIMIT DATA 256
+

@@ -1,0 +1,16 @@
+
+>JZ_OP DATA 0
+; Read parameter into AL
+ENTSR 0
+ENTAL PARAMS
+; If the parameter is zero, mark condition true
+JPALZ JZ_TRUE
+
+; Otherwise, mark condition false
+CL PARAMS
+JP PERFORM_BRANCH
+
+; Set location to 1 for true
+>JZ_TRUE ENTALK 1
+STRAL PARAMS
+JP PERFORM_BRANCH

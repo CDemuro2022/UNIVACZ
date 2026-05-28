@@ -1,0 +1,36 @@
+
+>GET_PARENT_OP DATA 0
+ENTSR 0
+
+; Read object number into AL
+ENTAL PARAMS
+ENTICR 1
+
+; Preserve PC
+STRB TMPPC
+
+; Get address of object
+RJP GET_OBJECT
+
+; Set PC to address of parent
+ENTBKB 4
+
+; Read parent object number
+RJP READBYTE
+
+; Shift value into AU
+LSHA 18
+ENTSR 0
+
+; Restore PC
+ENTB TMPPC
+
+; Read result variable number
+RJP READBYTE
+RJP INCPC
+ENTSR 0
+
+; Set result variable to parent object number
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER

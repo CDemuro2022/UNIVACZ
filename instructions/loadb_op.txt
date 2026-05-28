@@ -1,0 +1,35 @@
+
+>LOADB_OP DATA 0
+
+; Preserve PC
+ENTSR 0
+ENTICR 1
+STRB TMPPC
+
+; Calculate byte address
+ENTAL PARAMS+1
+ADDAL PARAMS
+
+; Set PC to byte address
+STRAL &1
+
+; Read byte into AL
+RJP READBYTE
+ENTSR 0
+
+; Shift byte into AL
+LSHA 18
+
+; Restore PC
+ENTB TMPPC
+
+; Read result variable number into AL
+RJP READBYTE
+RJP INCPC
+ENTSR 0
+
+; Set result variable to value
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER
+

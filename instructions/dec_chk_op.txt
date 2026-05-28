@@ -1,0 +1,68 @@
+
+; Currently failing CZECH test for unknown reasons
+
+>DEC_CHK_OP DATA 0
+OUT 0
+DATA DEC_CHK_MSG+20
+DATA DEC_CHK_MSG
+ENTSR 0
+
+; Read variable number into AL
+ENTAL PARAMS
+RJP GETVAR
+ENTSR 0
+
+; Decrement value and mask to 16 bits
+ADDALK &7776
+SLCL WORDMSK
+
+; Shift value into AU
+LSHA 18
+ENTAL PARAMS
+
+; Set variable to new value
+RJP SETVAR
+ENTSR 0
+
+; Read comparison value into AL
+ENTAL PARAMS+1
+
+; Complement sign to get unsigned magnitude
+SLCP WORDSIGN
+STRAL PARAMS+1
+
+; Read variable number into AL
+ENTAL PARAMS
+
+; If stack, read value directly from stack to not pop it off
+JPALZ DEC_CHK_STACK
+
+; Otherwise, get the value of the variable
+RJP GETVAR
+>DEC_CHK_CMP ENTSR 0
+SLCP WORDSIGN
+
+; If the value is now less than the comparison value,
+; set the condition to true
+CMAL PARAMS+1
+JPALNG DEC_CHK_TRUE
+
+; Otherwise, set the condition to false
+CL PARAMS
+JP PERFORM_BRANCH
+
+>DEC_CHK_TRUE ENTALK 1
+STRAL PARAMS
+JP PERFORM_BRANCH
+
+; Read last value on stack
+>DEC_CHK_STACK ENTICR 3
+ENTSR &11
+ENTALB &7776
+ENTSR 0
+JP DEC_CHK_CMP
+
+>DEC_CHK_MSG AW DEC_CHK Instruction
+DATA 13
+DATA 10
+

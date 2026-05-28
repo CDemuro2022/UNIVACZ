@@ -1,0 +1,8 @@
+
+>RTRUE_OP DATA 0
+
+; Load return value (1, or true) into AU
+ENTAU ONE
+
+; Jump to return handler
+JP RET_SUB

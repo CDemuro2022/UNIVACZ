@@ -1,0 +1,34 @@
+
+; Helper routine to get address of object
+; Expects PC to be preserved by caller
+
+>GET_OBJECT DATA 0
+
+; Decrement object number
+ADDALK &7776
+
+; Store object number in temp location
+STRAL TMPALVAR
+
+; Read address of object table
+ENTICR 1
+ENTBK 10
+ENTSR 0
+RJP READWORD
+
+; Skip over property defaults table
+ADDALK 62
+ENTSR 0
+
+; Put address of object table in PC
+STRAL 1
+
+; Multiply object number by 9 to get table offset
+ENTAL TMPALVAR
+LSHAL 3
+ADDAL TMPALVAR
+
+; Add offset to PC
+ADDAL 1
+STRAL 1
+IJP GET_OBJECT

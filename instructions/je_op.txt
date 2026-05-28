@@ -1,0 +1,42 @@
+
+>JE_OP DATA 0
+OUT 0
+DATA JE_MSG+15
+DATA JE_MSG
+; Set loop counter to parameter count
+ENTSR 0
+ENTICR 0
+ENTB PARAMCNT
+
+; Decrement loop counter by 1 to get index
+; of last param
+ENTBKB &7776
+
+; Read first param into AL
+ENTAL PARAMS
+
+; Loop through params to check for equality
+>PARAMS_TEST CMALB PARAMS
+; If the current parameter is equal, set condition to true
+JPALZ JE_TRUE
+
+; Otherwise, decrement the loop counter
+ENTBKB &7776
+ENTAU &10
+
+; If we have not checked every param, keep looping
+JPAUNZ PARAMS_TEST
+
+; If we've checked all the params and we didn't find 
+; an equal, set condition to false
+>JE_FALSE CL PARAMS
+JP PERFORM_BRANCH
+
+; Set condition to true
+>JE_TRUE ENTALK 1
+STRAL PARAMS
+JP PERFORM_BRANCH
+
+>JE_MSG AW JE Instruction
+DATA 13
+DATA 10

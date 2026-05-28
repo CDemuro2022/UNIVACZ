@@ -1,0 +1,24 @@
+
+>STOREW_OP DATA 0
+
+; Preserve PC
+ENTSR 0
+ENTICR 1
+STRB TMPPC
+
+; Calculate address of word
+ENTAL PARAMS+1
+LSHAL 1
+ADDAL PARAMS
+
+; Set PC to address
+STRAL 1
+
+; Write word
+ENTAL PARAMS+2
+RJP WRITEWORD
+ENTSR 0
+
+; Restore PC
+ENTB TMPPC
+JP PARAM_DECODER

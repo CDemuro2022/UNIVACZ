@@ -1,0 +1,25 @@
+
+>STORE_OP DATA 0
+OUT 0
+DATA STORE_MSG+18
+DATA STORE_MSG
+
+; Read variable number
+ENTICR 1
+ENTSR 0
+ENTAL PARAMS
+
+; Read value
+ENTAU PARAMS+1
+
+; Set variable to value
+RJP SETVAR
+ENTSR 0
+
+; Finish instruction
+JP PARAM_DECODER
+
+
+>STORE_MSG AW Store Instruction
+DATA 13
+DATA 10

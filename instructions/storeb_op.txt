@@ -1,0 +1,23 @@
+
+>STOREB_OP DATA 0
+
+; Preserve PC
+ENTSR 0
+ENTICR 1
+STRB TMPPC
+
+; Calculate byte address
+ENTAL PARAMS+1
+ADDAL PARAMS
+
+; Set PC to byte address
+STRAL 1
+
+; Write byte
+ENTAL PARAMS+2
+RJP WRITEBYTE
+ENTSR 0
+
+; Restore PC
+ENTB TMPPC
+JP PARAM_DECODER

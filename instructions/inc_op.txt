@@ -1,0 +1,27 @@
+
+>INC_OP DATA 0
+
+; Read variable number
+ENTSR 0
+ENTAL PARAMS
+
+; Get value of variable
+RJP GETVAR
+
+; Increment and mask to 16 bits
+ADDALK 1
+SLCL WORDMSK
+
+; Shift value into AU
+LSHA 18
+
+; Read variable number into AL
+ENTAL PARAMS
+
+; Set variable to new value
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER
+
+>WORDMSK DATA &177777
+

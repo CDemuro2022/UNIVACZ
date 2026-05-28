@@ -1,0 +1,40 @@
+
+>LOADW_OP DATA 0
+
+; Preserve PC
+ENTSR 0
+ENTICR 1
+STRB TMPPC
+
+; Read array index into AL
+ENTAL PARAMS+1
+
+; Multiply index by 2 to get offset
+LSHAL 1
+
+; Calculate address of word
+ADDAL PARAMS
+
+; Set PC to address
+STRAL 1
+
+; Read word into AL
+RJP READWORD
+
+; Shift word into AU
+LSHA 18
+ENTSR 0
+
+; Restore PC
+ENTB TMPPC
+
+; Read result variable number into AL
+RJP READBYTE
+RJP INCPC
+
+; Set result variable to word
+ENTSR 0
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER
+

@@ -1,0 +1,12 @@
+
+>PUSH_OP DATA 0
+ENTSR 0
+
+; Read value into AU
+ENTAU PARAMS
+
+; Push onto the stack by setting variable 0
+ENTALK 0
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER

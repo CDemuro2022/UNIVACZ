@@ -1,0 +1,49 @@
+
+>GET_CHILD_OP DATA 0
+ENTSR 0
+
+; Read object number into AL
+ENTAL PARAMS
+ENTICR 1
+
+; Preserve PC
+STRB TMPPC
+
+; Set PC to object address
+RJP GET_OBJECT
+
+; Set PC to child object address
+ENTBKB 6
+
+; Read child object number
+RJP READBYTE
+
+; Shift object number into AU
+; (and store in temp location)
+STRAL PARAMS
+LSHA 18
+ENTSR 0
+
+; Restore PC
+ENTB TMPPC
+
+; Read result variable number
+RJP READBYTE
+RJP INCPC
+
+; Set result variable to child object number
+ENTSR 0
+RJP SETVAR
+ENTSR 0
+
+; If the child object is not 0, the condition is true
+ENTAL PARAMS
+JPALNZ GET_CHILD_TRUE
+
+; Otherwise, it is false
+CL PARAMS
+JP PERFORM_BRANCH
+
+>GET_CHILD_TRUE ENTALK 1
+STRAL PARAMS
+JP PERFORM_BRANCH

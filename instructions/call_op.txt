@@ -1,0 +1,180 @@
+
+>CALL_OP DATA 0
+OUT 0
+DATA CALL_MSG+17
+DATA CALL_MSG
+
+; Read routine address
+ENTSR 0
+ENTAL PARAMS
+
+; If zero, immediately return false
+JPALZ ZERO_ROUTINE
+
+; Otherwise, read current stack frame address into AL
+ENTAL 2
+
+; Store it in the current stack location
+ENTICR 3
+ENTSR &11
+STRALB 0
+
+; Read current stack pointer
+ENTSR 0
+ENTAL 3
+
+; Store it as new stack frame pointer
+STRAL 2
+
+; Increment stack pointer
+ENTBKB 1
+
+; Store PC+1 as return address
+ENTALK 1
+ADDAL 1
+ENTSR &11
+STRALB 0
+
+; Increment stack pointer
+ENTBKB 1
+
+; Read result variable number
+ENTICR 1
+RJP READBYTE
+
+; Preserve result variable number in AU
+LSHA 18
+
+; Read call address into AL
+ENTSR 0
+ENTAL PARAMS
+
+; Unpack the packed address
+LSHAL 1
+
+; Set routine address as PC
+STRAL 1
+
+; Read number of local variables from routine header
+RJP READBYTE
+ENTICR 3
+ENTSR &11
+
+; Store number of locals in frame header
+STRALB 0
+
+; Increment stack pointer
+ENTBKB 1
+
+; Store result variable number in frame header
+STRAUB 0
+
+; Increment stack pointer
+ENTBKB 1
+
+; Store 0 in number of words used on routine stack
+CLB 0
+
+; Increment stack pointer
+ENTBKB 1
+
+; Re-read number of local variables from routine header
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+
+; If there are none, we're done
+JPALZ FINISH_CALL
+
+; Otherwise, store that number in temp memory location
+ENTSR 0
+STRAL PARAMS
+
+; Initialize loop counter to 1
+ENTICR 0
+ENTBK 1
+
+
+; Start of loop to read initial local variable values
+; from routine header
+>FETCH_LOCALS ENTICR 1
+; Read the value of the current local
+RJP READWORD
+RJP INCPC
+; Shift value into AU
+LSHA 18
+; Read current local number into AL
+ENTAL &10
+; Set local to value
+RJP SETVAR
+; Loop if more variables
+ENTICR 0
+ENTSR 0
+BSK PARAMS
+JP FETCH_LOCALS
+
+; Check if there is more than one parameter
+ENTALK 1
+CMAL PARAMCNT
+
+; If not, we're done
+JPALZ FINISH_CALL
+
+; Otherwise, check if there are more parameters
+; than local variables
+ENTAL PARAMCNT
+CMAL PARAMS
+
+; If not, we're good to start fetching them
+JPALNG PARAM_LOCALS
+
+; If there are, discard any extra parameters
+ENTAL PARAMS
+STRAL PARAMCNT
+ENTSR 0
+
+; Loop through the parameters and set local variables
+>PARAM_LOCALS ENTICR 0
+; Check if we've finished with the parameters
+ISK PARAMCNT
+; If we have, we're done
+JP FINISH_CALL
+; Otherwise, read the appropriate parameter
+ENTB PARAMCNT
+ENTAUB PARAMS
+; Read the current variable number into AL
+ENTAL &10
+; Set the current variable
+RJP SETVAR
+ENTSR 0
+; Jump to the beginning of the loop
+JP PARAM_LOCALS
+
+; Finish call by calculating current stack pointer
+>FINISH_CALL ENTSR &11
+ENTICR 2
+ENTALB 2
+ADDALB 4
+ENTSR 0
+ADDAL 2
+ADDALK 5
+STRAL 3
+ENTSR 0
+JP PARAM_DECODER
+
+; Shift the zero value into AU
+>ZERO_ROUTINE LSHA 18
+; Read the result variable number
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+; Set result variable to zero
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER
+
+
+
+>CALL_MSG AW Call Instruction
+DATA 13
+DATA 10

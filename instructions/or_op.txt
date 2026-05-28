@@ -1,0 +1,23 @@
+
+>OR_OP DATA 0
+
+; Read first parameter into AL
+ENTSR 0
+ENTAL PARAMS
+
+; Bitwise OR the two parameters
+SLSET PARAMS+1
+
+; Shift value into AU
+LSHA 18
+
+; Read result variable number
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+
+; Set result variable to value
+ENTSR 0
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER

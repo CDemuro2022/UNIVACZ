@@ -1,0 +1,27 @@
+
+>DEC_OP DATA 0
+ENTSR 0
+
+; Read variable number into AL
+ENTAL PARAMS
+
+; Get value of variable
+RJP GETVAR
+ENTSR 0
+
+; Decrement AL
+ADDALK &7776
+
+; Mask AL to 16 bits
+SLCL WORDMSK
+
+; Shift value into AU
+LSHA 18
+
+; Read variable number into AL
+ENTAL PARAMS
+
+; Set variable to value
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER

@@ -1,0 +1,9 @@
+
+>RET_OP DATA 0
+
+; Read return value into AU
+ENTSR 0
+ENTAU PARAMS
+
+; Return
+JP RET_SUB

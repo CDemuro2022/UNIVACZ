@@ -1,0 +1,23 @@
+
+>AND_OP DATA 0
+ENTSR 0
+
+; Read first parameter into AL
+ENTAL PARAMS
+
+; Bitwise AND the two parameters
+SLCL PARAMS+1
+
+; Shift the value into AU
+LSHA 18
+
+; Read result variable number
+ENTICR 1
+RJP READBYTE
+RJP INCPC
+
+; Set variable to value
+ENTSR 0
+RJP SETVAR
+ENTSR 0
+JP PARAM_DECODER
