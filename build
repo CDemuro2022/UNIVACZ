@@ -47,5 +47,8 @@ cat init.txt \
     instructions/get_parent_op.txt \
     instructions/get_child_op.txt \
     instructions/get_sibling_op.txt \
-    instructions/jin_op.txt > combined.txt
-../UNIVAC-1219/target/release/assembler combined.txt
+    instructions/jin_op.txt \
+    instructions/test_attr_op.txt \
+    instructions/set_attr_op.txt \
+    instructions/clear_attr_op.txt > combined.txt
+../rustemu/UNIVAC-1219/target/release/assembler combined.txt
