@@ -1,0 +1,37 @@
+
+>SET_ATTR_OP DATA 0
+; Preserve PC
+ENTICR 1
+STRB TMPPC
+; Get address of object
+ENTAL PARAMS
+RJP GET_OBJECT
+; Read attribute number
+ENTAL PARAMS+1
+; Check if attribute number is greater than or equal to 16
+CMAL ATTR_THRS
+JPALNG ATTR_SET_CHK
+; If it is, reduce it modulo 16 and increment PC by 2
+ADDALK &7757
+ENTBKB 2
+;Calculate shift
+>ATTR_SET_CHK STRAL PARAMS+1
+ENTALK 15
+SUBAL PARAMS+1
+SLSET ATTR_THRS+1
+STRAL ATTR_SET
+; Create bitmask to set bit
+ENTALK 1
+>ATTR_SET LSHAL 0
+STRAL PARAMS+1
+; Read current attribute word
+RJP READWORD
+ENTBKB &7776
+; Set attribute bit
+SLSET PARAMS+1
+; Write new attribute word back
+RJP WRITEWORD
+; Restore PC
+ENTB TMPPC
+JP PARAM_DECODER
+

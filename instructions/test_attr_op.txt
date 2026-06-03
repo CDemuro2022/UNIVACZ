@@ -1,17 +1,40 @@
 
-; Currently unfinished, not in build script
-
 >TEST_ATTR_OP DATA 0
-ENTSR 0
+; Preserve PC
 ENTICR 1
 STRB TMPPC
+; Get address of object
 ENTAL PARAMS
 RJP GET_OBJECT
-ENTSR 0
+; Read attribute number
 ENTAL PARAMS+1
-RSHAL 4
-ADDAL 1
-STRAL 1
-ENTALK &17
-SLCL PARAMS+1
-STRAL PARAMS+1
+; Check if attribute number is greater than or equal to 16
+CMAL ATTR_THRS
+JPALNG ATTR_FETCH
+; If it is, reduce it modulo 16 and increment PC by 2
+ADDALK &7757
+ENTBKB 2
+; Calculate shift
+>ATTR_FETCH ADDALK 2
+SLSET ATTR_THRS+1
+STRAL ATTR_TEST
+; Read attribute word
+RJP READWORD
+; Restore PC
+ENTB TMPPC
+; Check if attribute is set
+>ATTR_TEST LSHAL 2
+; If it is, the condition is true
+JPALNG TEST_ATTR_TRUE
+; Otherwise, the condition is false
+CL PARAMS
+JP PERFORM_BRANCH
+
+>TEST_ATTR_TRUE ENTALK 1
+STRAL PARAMS
+JP PERFORM_BRANCH
+
+
+>ATTR_THRS DATA 16
+DATA &504600
+

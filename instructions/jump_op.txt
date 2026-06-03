@@ -3,6 +3,19 @@
 ; Read offset to jump to
 ENTSR 0
 ENTAL PARAMS
+; Sign-extend to 17 bits
+LSHAL 2
+RSHAL 2
+SLCL PCMSK
+; Adjust PC
+ADDAL 1
+ADDALK &7775
+; Mask result to 17 bits
+SLCL PCMSK
+STRAL 1
 
-; Unconditionally branch
-JP BRANCH_OFFSET
+; Finish jump
+JP PARAM_DECODER
+
+>PCMSK DATA &377777
+
